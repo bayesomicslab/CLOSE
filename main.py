@@ -1,12 +1,41 @@
 from manager.load_config import CONFIG
-import pandas as pd
+import pickle 
+import os
+
 from tfidf.tfidf import closeDocsToTfidf
 
-def main():
-    # ADD CODE HERE
-    data_df = pd.read_csv("all_files_with_abstract_titles.csv")
+from embeddingsModels.loadModel import loadBertModelAndTokenizer, loadBioGptModelAndTokenizer
+from embeddingsModels.extractEmbeddings import extractEmbeddings
+from preprocessing.loadDataset import loadCloseDataset
 
-    closeDocsToTfidf(data_df, 500, "all_files_tfidf.csv")
+from manager.args import readArguments
+
+def main():
+    args = readArguments()
+
+    if args.command == "preprocess":
+        if args.extractEmbeddings:
+            model, tokenizer = loadBertModelAndTokenizer(args.model, args.tokenizer)
+            df = loadCloseDataset(args.file)
+
+            data = []
+            for _, row in df.iterrows():
+                data.append({
+                    "id": row["id"],
+                    "text": row["text"]
+                })
+
+            tokens_and_embeddings, embeddings = extractEmbeddings(model, tokenizer, data)
+
+            with open(os.path.join(args.saveDir, "tokens_and_embeddings.pkl"), "wb") as file:
+                pickle.dump(tokens_and_embeddings, file)
+                file.close()
+
+            with open(os.path.join(args.saveDir, "embeddings_raw.pkl"), "wb") as file:
+                pickle.dump(embeddings, file)
+                file.close()
+
+
 
     return
 
