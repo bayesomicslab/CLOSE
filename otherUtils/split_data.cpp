@@ -26,8 +26,6 @@ int main(){
 
   string cwd = string(currentDir);
 
-  cout << cwd << endl;
-
   string data_dir = cwd + "/all_files_with_abstract_titles.csv";
   ifstream data(data_dir.c_str());
 
