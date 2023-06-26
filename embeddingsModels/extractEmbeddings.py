@@ -18,8 +18,13 @@ def extractEmbeddings(model: PreTrainedModel, tokenizer: PreTrainedTokenizer, da
 
     model = model.to(device)
 
-    tokenized_text = tokenizer(data_str, truncation=True, padding="max_length",  return_tensors="pt").to(device)
+    print("STARTING TOKENIZING")
+    tokenized_text = tokenizer(data_str, truncation=True, padding="max_length",  return_tensors="pt")
+    print("FINISHED TOKENIZING")
+    tokenized_text = tokenized_text.to(device)
+    print("TOKENIZING TO CUDA")
     embeddings = model(**tokenized_text).last_hidden_state
+    print("MODEL RUNNING")
 
     tokens_and_embeddings = []
     for sample_emb, sample_tok, sample_id in zip(embeddings, tokenized_text["input_ids"], ids): #type: ignore
