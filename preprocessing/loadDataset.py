@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 def loadDataset(file: str, text_column: str, id_column: str):
     """
     Read the dataset and preprocess
