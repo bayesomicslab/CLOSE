@@ -7,6 +7,8 @@ using namespace std;
 typedef long long ll;
 
 string intToStr(ll n){
+  if(n == 0) return "0";
+
   string s = "";
   while(n){
     ll aux = n%10;
