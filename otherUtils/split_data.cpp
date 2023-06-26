@@ -3,6 +3,7 @@
 #define SPLIT_SIZE 10000
 
 using namespace std;
+typedef long long ll;
 
 int main(){
   ifstream data("/home/vyral/Documents/UConn/CrimProject/data/criminal_data_full.csv");
