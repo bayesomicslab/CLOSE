@@ -9,7 +9,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 # local libraries
-from manager.load_config import LOCAL
+from ..manager.load_config import LOCAL
 
 
 def __normalizeDataset(df: pd.DataFrame):
