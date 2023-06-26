@@ -39,8 +39,8 @@ int main(){
       file.flush();
       file.close();
 
-      string block_str = "files_with_abstract_titles_block_" + intToStr(block) + ".csv";
-      file.open(cwd + "/" + block_str);
+      string block_str = cwd + "/files_with_abstract_titles_block_" + intToStr(block) + ".csv";
+      file.open(block_str.c_str());
       file << headers << "\n";
     }
 
