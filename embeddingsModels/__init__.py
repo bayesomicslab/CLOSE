@@ -1,2 +1,2 @@
-from extractEmbeddings import *
-from loadModel import *
+from .extractEmbeddings import *
+from .loadModel import *
