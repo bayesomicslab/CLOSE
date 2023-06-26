@@ -19,12 +19,15 @@ string intToStr(ll n){
 }
 
 int main(){
-  ifstream data("/home/vyral/Documents/UConn/CrimProject/data/criminal_data_full.csv");
-
   char currentDir[FILENAME_MAX];
   getcwd(currentDir, sizeof(currentDir));
 
   string cwd = string(currentDir);
+
+  cout << cwd << endl;
+
+  string data_dir = cwd + "/all_files_with_abstract_titles.csv";
+  ifstream data(data_dir.c_str());
 
   ll cnt = 0;
   ll block = 0;
@@ -35,6 +38,7 @@ int main(){
   ofstream file;
 
   while(getline(data, line)){
+    cout << line << endl;
     if(cnt % SPLIT_SIZE == 0){
       file.flush();
       file.close();
