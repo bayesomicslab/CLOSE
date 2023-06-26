@@ -1,7 +1,8 @@
 #include <bits/stdc++.h>
 #include <unistd.h>
 
-#define SPLIT_SIZE 10000
+#define SPLIT_SIZE 334338
+
 
 using namespace std;
 typedef long long ll;
