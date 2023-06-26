@@ -1,14 +1,30 @@
 #include <bits/stdc++.h>
-#include <filesystem>
+#include <unistd.h>
+
 #define SPLIT_SIZE 10000
 
 using namespace std;
 typedef long long ll;
 
+string intToStr(ll n){
+  string s = "";
+  while(n){
+    ll aux = n%10;
+    n /= 10;
+    char c = '0'+aux;
+    s = c+s;
+  }
+
+  return s;
+}
+
 int main(){
   ifstream data("/home/vyral/Documents/UConn/CrimProject/data/criminal_data_full.csv");
 
-  filesystem::path cwd = filesystem::current_path();
+  char currentDir[FILENAME_MAX];
+  getcwd(currentDir, sizeof(currentDir));
+
+  string cwd = string(currentDir);
 
   ll cnt = 0;
   ll block = 0;
@@ -23,8 +39,8 @@ int main(){
       file.flush();
       file.close();
 
-      string block_str = "files_with_abstract_titles_block_" + to_string(block) + ".csv";
-      file.open(cwd / block_str);
+      string block_str = "files_with_abstract_titles_block_" + intToStr(block) + ".csv";
+      file.open(cwd + "/" + block_str);
       file << headers << "\n";
     }
 

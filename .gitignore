@@ -1,4 +1,7 @@
 env/
+*.o
+*.d
+*.run
 *__pycache__*
 *.csv
 testing/
