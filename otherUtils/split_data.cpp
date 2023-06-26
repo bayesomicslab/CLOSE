@@ -38,7 +38,6 @@ int main(){
   ofstream file;
 
   while(getline(data, line)){
-    cout << line << endl;
     if(cnt % SPLIT_SIZE == 0){
       file.flush();
       file.close();
