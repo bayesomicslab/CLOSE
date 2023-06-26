@@ -1,5 +1,4 @@
 env/
-*.run
 *__pycache__*
 *.csv
 testing/
