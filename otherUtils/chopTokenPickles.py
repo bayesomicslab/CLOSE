@@ -25,7 +25,7 @@ for id, input_ids, token_type_ids, attention_mask in zip(tokenized_text[0], toke
             "attention_mask": torch.stack(aux_tokenized_tokens["attention_mask"])
         }
         with open(os.path.join(".", f"tokenized_text_block_{block}.pkl"), "wb") as file:
-            print((aux_tokenized_ids, aux_tokenized_tokens))
+            print((aux_tokenized_ids, aux_tokenized_tokens_tensored))
             pickle.dump((aux_tokenized_ids, aux_tokenized_tokens_tensored), file)
             file.close()
 
@@ -46,6 +46,6 @@ if cnt > 0:
         "attention_mask": torch.stack(aux_tokenized_tokens["attention_mask"])
     }
     with open(os.path.join(".", f"tokenized_text_block_{block}.pkl"), "wb") as file:
-        print((aux_tokenized_ids, aux_tokenized_tokens))
+        print((aux_tokenized_ids, aux_tokenized_tokens_tensored))
         pickle.dump((aux_tokenized_ids, aux_tokenized_tokens_tensored), file)
         file.close()
