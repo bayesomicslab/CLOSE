@@ -17,6 +17,7 @@ cnt = 0
 block = 0
 aux_tokenized_ids = []
 aux_tokenized_tokens = {"input_ids": [], "token_type_ids": [], "attention_mask": []}
+
 for id, input_ids, token_type_ids, attention_mask in zip(tokenized_text[0], tokenized_text[1]["input_ids"], tokenized_text[1]["token_type_ids"], tokenized_text[1]["attention_mask"]):
     if(cnt == SPLIT_SIZE):
         aux_tokenized_tokens_tensored = {
@@ -29,7 +30,9 @@ for id, input_ids, token_type_ids, attention_mask in zip(tokenized_text[0], toke
             pickle.dump((aux_tokenized_ids, aux_tokenized_tokens_tensored), file)
             file.close()
 
-        aux_tokenized = ()
+        
+        aux_tokenized_ids = []
+        aux_tokenized_tokens = {"input_ids": [], "token_type_ids": [], "attention_mask": []}
         cnt = 0
         block += 1
 
