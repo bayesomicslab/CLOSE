@@ -26,7 +26,7 @@ print("FINISHED TOKENIZATION")
 print(tokenized_text)
 
 print("POSTPROCESSING TOKENIZATION")
-tokenized_with_ids = (id, tokenized_text)
+tokenized_with_ids = (ids, tokenized_text)
 print("FINISHED POSTPROCESSING TOKENIZATION")
 
 print("SAVING TOKENIZATION")
