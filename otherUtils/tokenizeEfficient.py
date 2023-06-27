@@ -3,8 +3,11 @@ from ..preprocessing import *
 import os
 import pickle
 
+SAVE_DIR = "/home/ndg21001/CLOSE/data"
+WORK_DIR = "/mnt/research/aguiarlab/proj/CLOSE/nick_data"
+
 print("LOADING DATASET")
-df = loadCloseDataset("./all_files_with_abstract_titles.csv")
+df = loadCloseDataset(os.path.join(SAVE_DIR, "./all_files_with_abstract_titles.csv"))
 #df = loadCloseDataset("./small_files_with_abstract_titles.csv")
 print("FINISHED LOADING DATASET")
 
@@ -30,7 +33,7 @@ tokenized_with_ids = (ids, tokenized_text)
 print("FINISHED POSTPROCESSING TOKENIZATION")
 
 print("SAVING TOKENIZATION")
-with open(os.path.join(".", "tokenized_text.pkl"), "wb") as file:
+with open(os.path.join(WORK_DIR, "tokenized_text.pkl"), "wb") as file:
   pickle.dump(tokenized_with_ids, file)
   file.close()
 print("FINISHED SAVING TOKENIZATION")
