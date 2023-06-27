@@ -4,8 +4,8 @@ import os
 import pickle
 
 print("LOADING DATASET")
-#df = loadCloseDataset("./all_files_with_abstract_titles.zip")
-df = loadCloseDataset("./small_files_with_abstract_titles.csv")
+df = loadCloseDataset("./all_files_with_abstract_titles.csv")
+#df = loadCloseDataset("./small_files_with_abstract_titles.csv")
 print("FINISHED LOADING DATASET")
 
 print("LOADING MODEL AND TOKENIZER")
