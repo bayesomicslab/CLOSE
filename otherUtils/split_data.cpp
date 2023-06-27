@@ -1,7 +1,8 @@
 #include <bits/stdc++.h>
 #include <unistd.h>
 
-#define SPLIT_SIZE 334338
+//#define SPLIT_SIZE 334338
+#define SPLIT_SIZE 10
 
 
 using namespace std;
@@ -43,9 +44,11 @@ int main(){
       if(file.is_open()){
         file.flush();
         file.close();
+        return 0;
       }
 
-      string block_str = cwd + "/files_with_abstract_titles_block_" + intToStr(block) + ".csv";
+      //string block_str = cwd + "/files_with_abstract_titles_block_" + intToStr(block) + ".csv";
+      string block_str = cwd + "/small_files_with_abstract_titles.csv";
       file.open(block_str.c_str());
       file << headers << "\n";
       block++;
