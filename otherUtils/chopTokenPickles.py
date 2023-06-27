@@ -1,5 +1,6 @@
 import pickle
 import os
+import torch
 from typing import Tuple
 
 
@@ -18,9 +19,14 @@ aux_tokenized_ids = []
 aux_tokenized_tokens = {"input_ids": [], "token_type_ids": [], "attention_mask": []}
 for id, input_ids, token_type_ids, attention_mask in zip(tokenized_text[0], tokenized_text[1]["input_ids"], tokenized_text[1]["token_type_ids"], tokenized_text[1]["attention_mask"]):
     if(cnt == SPLIT_SIZE):
+        aux_tokenized_tokens_tensored = {
+            "input_ids": torch.Tensor(aux_tokenized_tokens["input_ids"]),
+            "token_type_ids": torch.Tensor(aux_tokenized_tokens["token_type_ids"]),
+            "attention_mask": torch.Tensor(aux_tokenized_tokens["attention_mask"])
+        }
         with open(os.path.join(".", f"tokenized_text_block_{block}.pkl"), "wb") as file:
             print((aux_tokenized_ids, aux_tokenized_tokens))
-            pickle.dump((aux_tokenized_ids, aux_tokenized_tokens), file)
+            pickle.dump((aux_tokenized_ids, aux_tokenized_tokens_tensored), file)
             file.close()
 
         aux_tokenized = ()
@@ -34,7 +40,12 @@ for id, input_ids, token_type_ids, attention_mask in zip(tokenized_text[0], toke
     cnt += 1
 
 if cnt > 0:
+    aux_tokenized_tokens_tensored = {
+        "input_ids": torch.Tensor(aux_tokenized_tokens["input_ids"]),
+        "token_type_ids": torch.Tensor(aux_tokenized_tokens["token_type_ids"]),
+        "attention_mask": torch.Tensor(aux_tokenized_tokens["attention_mask"])
+    }
     with open(os.path.join(".", f"tokenized_text_block_{block}.pkl"), "wb") as file:
         print((aux_tokenized_ids, aux_tokenized_tokens))
-        pickle.dump((aux_tokenized_ids, aux_tokenized_tokens), file)
+        pickle.dump((aux_tokenized_ids, aux_tokenized_tokens_tensored), file)
         file.close()
