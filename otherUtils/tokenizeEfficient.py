@@ -4,7 +4,8 @@ import os
 import pickle
 
 print("LOADING DATASET")
-df = loadCloseDataset("./all_files_with_abstract_titles.zip")
+#df = loadCloseDataset("./all_files_with_abstract_titles.zip")
+df = loadCloseDataset("./small_files_with_abstract_titles.zip")
 print("FINISHED LOADING DATASET")
 
 print("LOADING MODEL AND TOKENIZER")
@@ -22,6 +23,7 @@ print("FINISHED PREPROCESSING FOR TOKENIZATION")
 print("STARTING TOKENIZATION")
 tokenized_text = tokenizer(data_str, truncation=True, padding="max_length",  return_tensors="pt")
 print("FINISHED TOKENIZATION")
+print(tokenized_text)
 
 print("POSTPROCESSING TOKENIZATION")
 tokenized_with_ids = {id: tokenized_text for id, tokenized_text in zip(ids, tokenized_text)}
