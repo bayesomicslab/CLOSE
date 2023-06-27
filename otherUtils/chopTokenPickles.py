@@ -19,11 +19,10 @@ aux_tokenized_ids = []
 aux_tokenized_tokens = {"input_ids": [], "token_type_ids": [], "attention_mask": []}
 for id, input_ids, token_type_ids, attention_mask in zip(tokenized_text[0], tokenized_text[1]["input_ids"], tokenized_text[1]["token_type_ids"], tokenized_text[1]["attention_mask"]):
     if(cnt == SPLIT_SIZE):
-        print(aux_tokenized_tokens["input_ids"])
         aux_tokenized_tokens_tensored = {
-            "input_ids": torch.Tensor(aux_tokenized_tokens["input_ids"]),
-            "token_type_ids": torch.Tensor(aux_tokenized_tokens["token_type_ids"]),
-            "attention_mask": torch.Tensor(aux_tokenized_tokens["attention_mask"])
+            "input_ids": torch.stack(aux_tokenized_tokens["input_ids"]),
+            "token_type_ids": torch.stack(aux_tokenized_tokens["token_type_ids"]),
+            "attention_mask": torch.stack(aux_tokenized_tokens["attention_mask"])
         }
         with open(os.path.join(".", f"tokenized_text_block_{block}.pkl"), "wb") as file:
             print((aux_tokenized_ids, aux_tokenized_tokens))
@@ -42,9 +41,9 @@ for id, input_ids, token_type_ids, attention_mask in zip(tokenized_text[0], toke
 
 if cnt > 0:
     aux_tokenized_tokens_tensored = {
-        "input_ids": torch.Tensor(aux_tokenized_tokens["input_ids"]),
-        "token_type_ids": torch.Tensor(aux_tokenized_tokens["token_type_ids"]),
-        "attention_mask": torch.Tensor(aux_tokenized_tokens["attention_mask"])
+        "input_ids": torch.stack(aux_tokenized_tokens["input_ids"]),
+        "token_type_ids": torch.stack(aux_tokenized_tokens["token_type_ids"]),
+        "attention_mask": torch.stack(aux_tokenized_tokens["attention_mask"])
     }
     with open(os.path.join(".", f"tokenized_text_block_{block}.pkl"), "wb") as file:
         print((aux_tokenized_ids, aux_tokenized_tokens))
