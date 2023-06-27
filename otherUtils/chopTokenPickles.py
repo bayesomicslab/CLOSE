@@ -4,7 +4,7 @@ import torch
 from typing import Tuple
 
 
-SPLIT_SIZE = 2
+SPLIT_SIZE = 334338
 
 tokenized_text: Tuple = ()
 with open(os.path.join(".", "tokenized_text.pkl"), "rb") as file:
