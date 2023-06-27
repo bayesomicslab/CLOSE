@@ -5,7 +5,7 @@ import os
 SPLIT_SIZE = 334338
 
 tokenized_text = {}
-with open(os.path.join(",", "tokenized_text.pkl"), "rb") as file:
+with open(os.path.join(".", "tokenized_text.pkl"), "rb") as file:
     tokenized_text = pickle.load(file)
     file.close()
 
