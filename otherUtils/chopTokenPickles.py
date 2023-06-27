@@ -9,6 +9,8 @@ with open(os.path.join(".", "tokenized_text.pkl"), "rb") as file:
     tokenized_text = pickle.load(file)
     file.close()
 
+print(tokenized_text)
+
 cnt = 0
 block = 0
 aux_tokenized = {}
