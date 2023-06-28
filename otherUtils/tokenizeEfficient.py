@@ -3,11 +3,10 @@ from ..preprocessing import *
 import os
 import pickle
 
-SAVE_DIR = "/home/ndg21001/CLOSE/data"
 WORK_DIR = "/mnt/research/aguiarlab/proj/CLOSE/nick_data"
 
 print("LOADING DATASET")
-df = loadCloseDataset(os.path.join(SAVE_DIR, "./all_files_with_abstract_titles.csv"))
+df = loadCloseDataset(os.path.join(WORK_DIR, "./all_files_with_abstract_titles.csv"))
 #df = loadCloseDataset("./small_files_with_abstract_titles.csv")
 print("FINISHED LOADING DATASET")
 
