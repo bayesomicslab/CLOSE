@@ -37,6 +37,9 @@ def extractEmbeddings(model: PreTrainedModel, data: Tuple[List, Dict]):
     for k in data_tokenized:
         data_tokenized[k].to(device)
 
+    for k in data_tokenized:
+        print(data_tokenized[k].get_device())
+
     print("TOKENIZING TO CUDA")
     embeddings = model(**data_tokenized).last_hidden_state
     print("MODEL RUNNING")
