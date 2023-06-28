@@ -13,11 +13,6 @@ with open(os.path.join(WORK_DIR, "tokenized_text.pkl"), "rb") as file:
     tokenized_text = pickle.load(file)
     file.close()
 
-print(tokenized_text)
-print(len(tokenized_text[0]))
-
-quit()
-
 cnt = 0
 block = 0
 aux_tokenized_ids = []

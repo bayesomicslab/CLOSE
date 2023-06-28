@@ -24,10 +24,6 @@ for _, row in df.iterrows():
   data_str.append(row["text"])
 print("FINISHED PREPROCESSING FOR TOKENIZATION")
 
-print(len(ids))
-
-
-quit()
 print("STARTING TOKENIZATION")
 tokenized_text = tokenizer(data_str, truncation=True, padding="max_length",  return_tensors="pt")
 print("FINISHED TOKENIZATION")
