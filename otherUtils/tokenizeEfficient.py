@@ -11,6 +11,8 @@ df = loadCloseDataset(os.path.join(SAVE_DIR, "./all_files_with_abstract_titles.c
 #df = loadCloseDataset("./small_files_with_abstract_titles.csv")
 print("FINISHED LOADING DATASET")
 
+print(df.info())
+
 print("LOADING MODEL AND TOKENIZER")
 model, tokenizer = loadBertModelAndTokenizer("bert-base-uncased", "bert-base-uncased")
 print("LOADING MODEL AND TOKENIZER")
@@ -23,6 +25,10 @@ for _, row in df.iterrows():
   data_str.append(row["text"])
 print("FINISHED PREPROCESSING FOR TOKENIZATION")
 
+print(len(ids))
+
+
+quit()
 print("STARTING TOKENIZATION")
 tokenized_text = tokenizer(data_str, truncation=True, padding="max_length",  return_tensors="pt")
 print("FINISHED TOKENIZATION")
