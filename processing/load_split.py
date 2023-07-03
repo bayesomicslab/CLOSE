@@ -22,7 +22,7 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
     extracted_embeddings = []
 
     id_batch = []
-    tokenized_batch = {}
+    tokenized_batch = {"input_ids": [], "token_type_ids": [], "attention_mask": []}
     cnt = 0
     cur_batch = 0
 
