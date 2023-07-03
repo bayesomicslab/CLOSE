@@ -65,4 +65,4 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
 
 
         
-    return id_embeddings, torch.stack(extracted_embeddings)
+    return id_embeddings, torch.stack(extracted_embeddings).to("cpu")
