@@ -42,6 +42,7 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
                 print(f"RUNNING BATCH {cur_batch} EXTRACT EMBEDDINGS")
     
                 embeddings_batch = run(model, (id_batch, tokenized_batch_to_device))
+                print(embeddings_batch)
                 print(f"FINISHED RUNNING BATCH {cur_batch} EXTRACT EMBEDDINGS")
     
                 print(f"MOVING BATCH {cur_batch} TO CPU")
