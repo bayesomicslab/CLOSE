@@ -11,7 +11,7 @@ import pickle
 __base_ram_usage = 0
 __batch_ram_usage = -1
 
-def __unloadRam(id_embeddings: List, extracted_embeddings: List, batch_num: int, save_dir: str=".", ram_use_limit_percentage: int = 90):
+def __unloadRam(id_embeddings: List, extracted_embeddings: List, batch_num: int, save_dir: str=".", ram_use_limit_percentage: int = 80):
     """
     Save the batch of embeddings passed in into the save_dir if ram usage is being breached
 
