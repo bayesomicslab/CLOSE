@@ -46,7 +46,7 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
                 print(f"FINISHED RUNNING BATCH {cur_batch} EXTRACT EMBEDDINGS")
     
                 print(f"MOVING BATCH {cur_batch} TO CPU")
-                for i, emb in embeddings_batch:
+                for i, emb in zip(embeddings_batch[0], embeddings_batch[1]):
                     id_embeddings.append(i)
                     extracted_embeddings.append(emb.to("cpu"))
                 print(f"FINISHED MOVING BATCH {cur_batch} TO CPU")
