@@ -30,8 +30,8 @@ def extractEmbeddings(model: PreTrainedModel, data: Tuple[List, Dict]):
     ids = data[0]
     data_tokenized = data[1]
 
-    print("TOKENIZING TO CUDA")
-    embeddings = model(**data_tokenized).last_hidden_state
     print("MODEL RUNNING")
+    embeddings = model(**data_tokenized).last_hidden_state
+    print("FINISHED MODEL RUNNING")
 
     return ids, embeddings
