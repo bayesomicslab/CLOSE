@@ -26,16 +26,24 @@ def __unloadRam(id_embeddings: List, extracted_embeddings: List, batch_num: int,
     if __batch_ram_usage == -1:
         __batch_ram_usage = psutil.virtual_memory()[2] - __base_ram_usage
 
+    print(f"BASE RAM: {__base_ram_usage}\tBATCH_RAM:{__batch_ram_usage}\tCUR_RAM:{psutil.virtual_memory()[2]}")
+
     if psutil.virtual_memory()[2] + __batch_ram_usage > ram_use_limit_percentage:
+        print("MOVING FILES TO DISK")
         os.makedirs(save_dir, exist_ok=True)
         with open(os.path.join(save_dir, f"ids_and_embeddings_{batch_num}.pkl"), "wb") as file:
             pickle.dump((id_embeddings, extracted_embeddings), file)
             file.close()
+        print("FILES MOVED TO DISK")
 
+        print("REMOVING IDS AND EMBEDDINGS FROM MEMORY")
         id_embeddings.clear()
         extracted_embeddings.clear()
+        print("FINISHED CLEARING FROM MEMORY")
 
+        print("ZIPPING THE SAVED EMBEDDINGS")
         subprocess.Popen("zip -r save_dir.zip save_dir && rm -rf save_dir", shell=True)
+        print("FINISHED ZIPPING THE SAVED EMBEDDINGS")
 
         return True
 
@@ -66,7 +74,6 @@ def __processLoad(id_embeddings: List, extracted_embeddings: List, batch_ids: Li
     print(f"RUNNING BATCH {batch_num} EXTRACT EMBEDDINGS")
     
     embeddings_batch = run(model, (batch_ids, tokenized_batch_to_device))
-    print(embeddings_batch)
     print(f"FINISHED RUNNING BATCH {batch_num} EXTRACT EMBEDDINGS")
     
     print(f"MOVING BATCH {batch_num} TO CPU")
@@ -116,6 +123,7 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
     
         for id, input_ids, token_type_ids, attention_mask in zip(data[0], data[1]["input_ids"], data[1]["token_type_ids"], data[1]["attention_mask"]):
             if cnt == split_size:
+                print("-"*50)
                 __processLoad(id_embeddings, extracted_embeddings, id_batch, tokenized_batch, cur_batch, model, run, device)
 
                 id_batch = []
@@ -123,10 +131,12 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
                 cnt = 0
                 cur_batch += 1
 
-                if __unloadRam(id_embeddings, extracted_embeddings, cur_batch, save_dir=os.path.join(".", f"ram_batch_{ram_batch}")):
+                if __unloadRam(id_embeddings, extracted_embeddings, ram_batch, save_dir=os.path.join(".", f"ids_and_embeddings")):
                     ram_batch += 1
 
                 __memoryCleanup()
+
+                print("-"*50)
     
             id_batch.append(id)
             tokenized_batch["input_ids"].append(input_ids)
