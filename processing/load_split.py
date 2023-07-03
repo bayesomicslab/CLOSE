@@ -6,7 +6,8 @@ import gc
 import psutil
 import os
 import subprocess
-import pickle
+import numpy as np
+import h5py
 
 __base_ram_usage = 0
 __batch_ram_usage = -1
@@ -31,8 +32,9 @@ def __unloadRam(id_embeddings: List, extracted_embeddings: List, batch_num: int,
     if psutil.virtual_memory()[2] + __batch_ram_usage > ram_use_limit_percentage:
         print("MOVING FILES TO DISK")
         os.makedirs(save_dir, exist_ok=True)
-        with open(os.path.join(save_dir, f"ids_and_embeddings_{batch_num}.pkl"), "wb") as file:
-            pickle.dump((id_embeddings, extracted_embeddings), file)
+        with h5py.File(os.path.join(save_dir, f"ids_and_embeddings_{batch_num}.hdf5"), "w") as file:
+            file.create_dataset("ids", data=id_embeddings)
+            file.create_dataset("embeddings", data=np.asarray(extracted_embeddings))
             file.close()
         print("FILES MOVED TO DISK")
 
@@ -79,7 +81,7 @@ def __processLoad(id_embeddings: List, extracted_embeddings: List, batch_ids: Li
     print(f"MOVING BATCH {batch_num} TO CPU")
     for i, emb in zip(embeddings_batch[0], embeddings_batch[1]):
         id_embeddings.append(i)
-        extracted_embeddings.append(emb.to("cpu"))
+        extracted_embeddings.append(emb.to("cpu").numpy())
     print(f"FINISHED MOVING BATCH {batch_num} TO CPU")
     
 def __memoryCleanup():
