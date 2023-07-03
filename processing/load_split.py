@@ -48,7 +48,7 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
             print(f"FINISHED MOVING BATCH {cur_batch} TO CPU")
 
             id_batch = []
-            tokenized_batch = {}
+            tokenized_batch = {"input_ids": [], "token_type_ids": [], "attention_mask": []}
 
             cnt = 0
             cur_batch = 1
