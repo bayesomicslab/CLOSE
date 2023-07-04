@@ -129,12 +129,18 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
                 cnt = 0
                 cur_batch += 1
 
+                print(f"extracted_embeddings: len {len(extracted_embeddings) if extracted_embeddings is not None else 'None'}")
+
                 if __unloadRam(id_embeddings, extracted_embeddings, ram_batch, save_dir=os.path.join(".", f"ids_and_embeddings")):
                     ram_batch += 1
                     id_embeddings = []
                     extracted_embeddings = None
 
+                print(f"extracted_embeddings: len {len(extracted_embeddings) if extracted_embeddings is not None else 'None'}")
+
                 __memoryCleanup()
+
+                print(f"extracted_embeddings: len {len(extracted_embeddings) if extracted_embeddings is not None else 'None'}")
 
                 print("-"*50)
     
