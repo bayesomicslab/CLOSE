@@ -1,5 +1,6 @@
 from typing import Callable, Dict, List, Tuple
 
+from dataclasses import dataclass, field
 from transformers import PreTrainedModel
 import torch
 import gc
@@ -12,7 +13,13 @@ import h5py
 __base_ram_usage = 0
 __batch_ram_usage = -1
 
-def __unloadRam(id_embeddings: List, extracted_embeddings: np.ndarray | None, batch_num: int, save_dir: str=".", ram_use_limit_percentage: int = 60):
+@dataclass
+class __BatchEmbeddingData:
+    ids: List = field(default_factory=lambda: [])
+    embeddings: np.ndarray | None = None
+
+
+def __unloadRam(data: __BatchEmbeddingData, batch_num: int, save_dir: str=".", ram_use_limit_percentage: int = 60):
     """
     Save the batch of embeddings passed in into the save_dir if ram usage is being breached
 
@@ -33,17 +40,19 @@ def __unloadRam(id_embeddings: List, extracted_embeddings: np.ndarray | None, ba
         print("MOVING FILES TO DISK")
         os.makedirs(save_dir, exist_ok=True)
         with h5py.File(os.path.join(save_dir, f"ids_and_embeddings_{batch_num}.hdf5"), "w") as file:
-            file.create_dataset("ids", data=id_embeddings)
-            file.create_dataset("embeddings", data=extracted_embeddings)
+            file.create_dataset("ids", data=data.ids)
+            file.create_dataset("embeddings", data=data.embeddings)
             file.close()
         print("FILES MOVED TO DISK")
 
+        data.ids = []
+        data.embeddings = None
 
         return True
 
     return False
 
-def __processLoad(id_embeddings: List, extracted_embeddings: np.ndarray | None, batch_ids: List, batch_tokenized: Dict, batch_num: int, model: PreTrainedModel, run: Callable, device: str = "cpu"):
+def __processLoad(data: __BatchEmbeddingData, batch_ids: List, batch_tokenized: Dict, batch_num: int, model: PreTrainedModel, run: Callable, device: str = "cpu"):
     """
     process the corresponding load on the model and extract embeddings
 
@@ -71,13 +80,13 @@ def __processLoad(id_embeddings: List, extracted_embeddings: np.ndarray | None, 
     print(f"FINISHED RUNNING BATCH {batch_num} EXTRACT EMBEDDINGS")
     
     print(f"MOVING BATCH {batch_num} TO CPU")
-    print(f"extracted_embeddings: len {len(extracted_embeddings) if extracted_embeddings is not None else 'None'}")
+    print(f"extracted_embeddings: len {len(data.embeddings) if data.embeddings is not None else 'None'}")
     for i, emb in zip(embeddings_batch[0], embeddings_batch[1]):
-        id_embeddings.append(i)
-        if extracted_embeddings is None:
-            extracted_embeddings = np.array([emb.to('cpu').detach().numpy()])
-        extracted_embeddings = np.vstack([extracted_embeddings, [emb.to("cpu").detach().numpy()]])
-    print(f"extracted_embeddings: len {len(extracted_embeddings) if extracted_embeddings is not None else 'None'}")
+        data.ids.append(i)
+        if data.embeddings is None:
+            data.embeddings = np.array([emb.to('cpu').detach().numpy()])
+        data.embeddings = np.vstack([data.embeddings, [emb.to("cpu").detach().numpy()]])
+    print(f"extracted_embeddings: len {len(data.embeddings) if data.embeddings is not None else 'None'}")
     print(f"FINISHED MOVING BATCH {batch_num} TO CPU")
     
 def __memoryCleanup():
@@ -85,8 +94,6 @@ def __memoryCleanup():
     gc.collect()
     torch.cuda.empty_cache()
     print(f"FINISHED COLLECTING GARBAGE")
-
-
 
 
 def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, run: Callable, split_size: int = 1000, save_dir: str = "."):
@@ -108,8 +115,7 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
     
         model = model.to(device)
     
-        id_embeddings = []
-        extracted_embeddings = None
+        batch_embedding_data = __BatchEmbeddingData()
     
         id_batch = []
         tokenized_batch = {"input_ids": [], "token_type_ids": [], "attention_mask": []}
@@ -122,25 +128,23 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
         for id, input_ids, token_type_ids, attention_mask in zip(data[0], data[1]["input_ids"], data[1]["token_type_ids"], data[1]["attention_mask"]):
             if cnt == split_size:
                 print("-"*50)
-                __processLoad(id_embeddings, extracted_embeddings, id_batch, tokenized_batch, cur_batch, model, run, device)
+                __processLoad(batch_embedding_data, id_batch, tokenized_batch, cur_batch, model, run, device)
 
                 id_batch = []
                 tokenized_batch = {"input_ids": [], "token_type_ids": [], "attention_mask": []}
                 cnt = 0
                 cur_batch += 1
 
-                print(f"extracted_embeddings: len {len(extracted_embeddings) if extracted_embeddings is not None else 'None'}")
+                print(f"extracted_embeddings: len {len(batch_embedding_data.embeddings) if batch_embedding_data.embeddings is not None else 'None'}")
 
-                if __unloadRam(id_embeddings, extracted_embeddings, ram_batch, save_dir=os.path.join(".", f"ids_and_embeddings")):
+                if __unloadRam(batch_embedding_data, ram_batch, save_dir=os.path.join(".", f"ids_and_embeddings")):
                     ram_batch += 1
-                    id_embeddings = []
-                    extracted_embeddings = None
 
-                print(f"extracted_embeddings: len {len(extracted_embeddings) if extracted_embeddings is not None else 'None'}")
+                print(f"extracted_embeddings: len {len(batch_embedding_data.embeddings) if batch_embedding_data.embeddings is not None else 'None'}")
 
                 __memoryCleanup()
 
-                print(f"extracted_embeddings: len {len(extracted_embeddings) if extracted_embeddings is not None else 'None'}")
+                print(f"extracted_embeddings: len {len(batch_embedding_data.embeddings) if batch_embedding_data.embeddings is not None else 'None'}")
 
                 print("-"*50)
     
@@ -152,7 +156,7 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
 
         if cnt > 0:
             print("-"*50)
-            __processLoad(id_embeddings, extracted_embeddings, id_batch, tokenized_batch, cur_batch, model, run, device)
+            __processLoad(batch_embedding_data, id_batch, tokenized_batch, cur_batch, model, run, device)
 
             id_batch = []
             tokenized_batch = {"input_ids": [], "token_type_ids": [], "attention_mask": []}
@@ -161,10 +165,8 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
 
             __batch_ram_usage = 100 # WARNING: Stupid trick to force ram unloader to save files, don't change but don't do this trick either
 
-            if __unloadRam(id_embeddings, extracted_embeddings, ram_batch, save_dir=os.path.join(".", f"ids_and_embeddings")):
+            if __unloadRam(batch_embedding_data, ram_batch, save_dir=os.path.join(".", f"ids_and_embeddings")):
                 ram_batch += 1
-                id_embeddings = []
-                extracted_embeddings = None
 
             __memoryCleanup()
 
