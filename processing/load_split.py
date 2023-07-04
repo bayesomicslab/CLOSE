@@ -12,7 +12,7 @@ import h5py
 __base_ram_usage = 0
 __batch_ram_usage = -1
 
-def __unloadRam(id_embeddings: List, extracted_embeddings: List, batch_num: int, save_dir: str=".", ram_use_limit_percentage: int = 80):
+def __unloadRam(id_embeddings: List, extracted_embeddings: np.ndarray | None, batch_num: int, save_dir: str=".", ram_use_limit_percentage: int = 60):
     """
     Save the batch of embeddings passed in into the save_dir if ram usage is being breached
 
@@ -34,24 +34,16 @@ def __unloadRam(id_embeddings: List, extracted_embeddings: List, batch_num: int,
         os.makedirs(save_dir, exist_ok=True)
         with h5py.File(os.path.join(save_dir, f"ids_and_embeddings_{batch_num}.hdf5"), "w") as file:
             file.create_dataset("ids", data=id_embeddings)
-            file.create_dataset("embeddings", data=np.asarray(extracted_embeddings))
+            file.create_dataset("embeddings", data=extracted_embeddings)
             file.close()
         print("FILES MOVED TO DISK")
 
-        print("REMOVING IDS AND EMBEDDINGS FROM MEMORY")
-        id_embeddings.clear()
-        extracted_embeddings.clear()
-        print("FINISHED CLEARING FROM MEMORY")
-
-        print("ZIPPING THE SAVED EMBEDDINGS")
-        subprocess.Popen("zip -r save_dir.zip save_dir && rm -rf save_dir", shell=True)
-        print("FINISHED ZIPPING THE SAVED EMBEDDINGS")
 
         return True
 
     return False
 
-def __processLoad(id_embeddings: List, extracted_embeddings: List, batch_ids: List, batch_tokenized: Dict, batch_num: int, model: PreTrainedModel, run: Callable, device: str = "cpu"):
+def __processLoad(id_embeddings: List, extracted_embeddings: np.ndarray | None, batch_ids: List, batch_tokenized: Dict, batch_num: int, model: PreTrainedModel, run: Callable, device: str = "cpu"):
     """
     process the corresponding load on the model and extract embeddings
 
@@ -81,7 +73,9 @@ def __processLoad(id_embeddings: List, extracted_embeddings: List, batch_ids: Li
     print(f"MOVING BATCH {batch_num} TO CPU")
     for i, emb in zip(embeddings_batch[0], embeddings_batch[1]):
         id_embeddings.append(i)
-        extracted_embeddings.append(emb.to("cpu").numpy())
+        if extracted_embeddings is None:
+            extracted_embeddings = np.ndarray([emb.to('cpu').numpy()])
+        extracted_embeddings = np.vstack([extracted_embeddings, emb.to("cpu").numpy()])
     print(f"FINISHED MOVING BATCH {batch_num} TO CPU")
     
 def __memoryCleanup():
@@ -113,7 +107,7 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
         model = model.to(device)
     
         id_embeddings = []
-        extracted_embeddings = []
+        extracted_embeddings = None
     
         id_batch = []
         tokenized_batch = {"input_ids": [], "token_type_ids": [], "attention_mask": []}
@@ -135,6 +129,8 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
 
                 if __unloadRam(id_embeddings, extracted_embeddings, ram_batch, save_dir=os.path.join(".", f"ids_and_embeddings")):
                     ram_batch += 1
+                    id_embeddings = []
+                    extracted_embeddings = None
 
                 __memoryCleanup()
 
@@ -146,5 +142,24 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
             tokenized_batch["attention_mask"].append(attention_mask)
             cnt += 1
 
+        if cnt > 0:
+            print("-"*50)
+            __processLoad(id_embeddings, extracted_embeddings, id_batch, tokenized_batch, cur_batch, model, run, device)
 
-    return id_embeddings, torch.stack(extracted_embeddings).to("cpu")
+            id_batch = []
+            tokenized_batch = {"input_ids": [], "token_type_ids": [], "attention_mask": []}
+            cnt = 0
+            cur_batch += 1
+
+            if __unloadRam(id_embeddings, extracted_embeddings, ram_batch, save_dir=os.path.join(".", f"ids_and_embeddings")):
+                ram_batch += 1
+                id_embeddings = []
+                extracted_embeddings = None
+
+            __memoryCleanup()
+
+            print("-"*50)
+
+        print("ZIPPING THE SAVED EMBEDDINGS")
+        subprocess.Popen(f"zip -r {os.path.join('.', 'ids_and_embeddings')}.zip {os.path.join('.', 'ids_and_embeddings')} && rm -rf {os.path.join('.', 'ids_and_embeddings')}", shell=True)
+        print("FINISHED ZIPPING THE SAVED EMBEDDINGS")
