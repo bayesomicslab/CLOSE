@@ -74,10 +74,8 @@ def __processLoad(id_embeddings: List, extracted_embeddings: np.ndarray | None, 
     for i, emb in zip(embeddings_batch[0], embeddings_batch[1]):
         id_embeddings.append(i)
         if extracted_embeddings is None:
-            aux = emb.to('cpu').detach().numpy()
-            print(aux)
-            extracted_embeddings = np.ndarray([aux])
-        extracted_embeddings = np.vstack([extracted_embeddings, emb.to("cpu").numpy()])
+            extracted_embeddings = np.array([emb.to('cpu').detach().numpy()])
+        extracted_embeddings = np.vstack([extracted_embeddings, emb.to("cpu").detach().numpy()])
     print(f"FINISHED MOVING BATCH {batch_num} TO CPU")
     
 def __memoryCleanup():
