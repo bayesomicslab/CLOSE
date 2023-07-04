@@ -151,6 +151,8 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
             cnt = 0
             cur_batch += 1
 
+            __batch_ram_usage = 100 # WARNING: Stupid trick to force ram unloader to save files, don't change but don't do this trick either
+
             if __unloadRam(id_embeddings, extracted_embeddings, ram_batch, save_dir=os.path.join(".", f"ids_and_embeddings")):
                 ram_batch += 1
                 id_embeddings = []
