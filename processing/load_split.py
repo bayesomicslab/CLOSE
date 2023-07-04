@@ -80,12 +80,12 @@ def __processLoad(data: __BatchEmbeddingData, batch_ids: List, batch_tokenized: 
     print(f"FINISHED RUNNING BATCH {batch_num} EXTRACT EMBEDDINGS")
     
     print(f"MOVING BATCH {batch_num} TO CPU")
-    print(f"extracted_embeddings: len {len(data.embeddings) if data.embeddings is not None else 'None'}")
     for i, emb in zip(embeddings_batch[0], embeddings_batch[1]):
         data.ids.append(i)
         if data.embeddings is None:
             data.embeddings = np.array([emb.to('cpu').detach().numpy()])
-        data.embeddings = np.vstack([data.embeddings, [emb.to("cpu").detach().numpy()]])
+        else:
+            data.embeddings = np.vstack([data.embeddings, [emb.to("cpu").detach().numpy()]])
     print(f"extracted_embeddings: len {len(data.embeddings) if data.embeddings is not None else 'None'}")
     print(f"FINISHED MOVING BATCH {batch_num} TO CPU")
     
@@ -107,6 +107,7 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
     """
 
     global __base_ram_usage
+    global __batch_ram_usage
     
     torch.cuda.empty_cache()
 
@@ -135,16 +136,10 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
                 cnt = 0
                 cur_batch += 1
 
-                print(f"extracted_embeddings: len {len(batch_embedding_data.embeddings) if batch_embedding_data.embeddings is not None else 'None'}")
-
                 if __unloadRam(batch_embedding_data, ram_batch, save_dir=os.path.join(".", f"ids_and_embeddings")):
                     ram_batch += 1
 
-                print(f"extracted_embeddings: len {len(batch_embedding_data.embeddings) if batch_embedding_data.embeddings is not None else 'None'}")
-
                 __memoryCleanup()
-
-                print(f"extracted_embeddings: len {len(batch_embedding_data.embeddings) if batch_embedding_data.embeddings is not None else 'None'}")
 
                 print("-"*50)
     
