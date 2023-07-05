@@ -16,7 +16,7 @@ __batch_ram_usage = -1
 @dataclass
 class __BatchEmbeddingData:
     ids: List = field(default_factory=lambda: [])
-    embeddings: np.ndarray | None = None
+    embeddings: List = field(default_factory=lambda: [])
 
 
 def __unloadRam(data: __BatchEmbeddingData, batch_num: int, save_dir: str=".", ram_use_limit_percentage: int = 60):
@@ -46,7 +46,7 @@ def __unloadRam(data: __BatchEmbeddingData, batch_num: int, save_dir: str=".", r
         print("FILES MOVED TO DISK")
 
         data.ids = []
-        data.embeddings = None
+        data.embeddings = []
 
         return True
 
@@ -82,10 +82,8 @@ def __processLoad(data: __BatchEmbeddingData, batch_ids: List, batch_tokenized: 
     print(f"MOVING BATCH {batch_num} TO CPU")
     for i, emb in zip(embeddings_batch[0], embeddings_batch[1]):
         data.ids.append(i)
-        if data.embeddings is None:
-            data.embeddings = np.array([emb.to('cpu').detach().numpy()])
-        else:
-            data.embeddings = np.vstack([data.embeddings, [emb.to("cpu").detach().numpy()]])
+        data.embeddings.append(emb.to('cpu').detach().numpy())
+
     print(f"extracted_embeddings: len {len(data.embeddings) if data.embeddings is not None else 'None'}")
     print(f"FINISHED MOVING BATCH {batch_num} TO CPU")
     
