@@ -8,9 +8,11 @@ import os
 import subprocess
 import numpy as np
 import h5py
+from guppy import hpy
 
 __base_ram_usage = 0
 __batch_ram_usage = -1
+hpm = hpy()
 
 class __BatchEmbeddingData:
     def __init__(self):
@@ -55,7 +57,9 @@ def __unloadRam(data: __BatchEmbeddingData, batch_num: int, save_dir: str=".", r
         #subprocess.run(f"zip -r {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}')}.zip {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}.hdf5')} && rm -rf {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}.hdf5')}", shell=True)
         #print("FINISHED ZIPPING THE SAVED EMBEDDINGS")
 
+        print(hpm.heap())
         data.clearRam()
+        print(hpm.heap())
 
         return True
 
