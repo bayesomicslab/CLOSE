@@ -45,6 +45,10 @@ def __unloadRam(data: __BatchEmbeddingData, batch_num: int, save_dir: str=".", r
             file.close()
         print("FILES MOVED TO DISK")
 
+        print("ZIPPING THE SAVED EMBEDDINGS")
+        subprocess.Popen(f"zip -r {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}')}.zip {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}.hdf5')} && rm -rf {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}.hdf5')}", shell=True)
+        print("FINISHED ZIPPING THE SAVED EMBEDDINGS")
+
         data.ids = []
         data.embeddings = []
 
@@ -165,6 +169,3 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
 
             print("-"*50)
 
-        print("ZIPPING THE SAVED EMBEDDINGS")
-        subprocess.Popen(f"zip -r {os.path.join('.', 'ids_and_embeddings')}.zip {os.path.join('.', 'ids_and_embeddings')} && rm -rf {os.path.join('.', 'ids_and_embeddings')}", shell=True)
-        print("FINISHED ZIPPING THE SAVED EMBEDDINGS")
