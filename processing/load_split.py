@@ -151,11 +151,15 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
                 if __unloadRam(batch_embedding_data, ram_batch, save_dir=os.path.join(".", f"ids_and_embeddings")):
                     ram_batch += 1
 
-                __memoryCleanup()
+                    __memoryCleanup()
 
-                all_objects = muppy.get_objects()
-                sum = summary.summarize(all_objects)
-                summary.print_(sum)
+                    all_objects = muppy.get_objects()
+                    sum = summary.summarize(all_objects)
+                    summary.print_(sum)
+
+                else:
+                    __memoryCleanup()
+
 
                 print("-"*50)
     
