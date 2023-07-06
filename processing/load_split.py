@@ -1,6 +1,5 @@
 from typing import Callable, Dict, List, Tuple
 
-from dataclasses import dataclass, field
 from transformers import PreTrainedModel
 import torch
 import gc
@@ -13,10 +12,16 @@ import h5py
 __base_ram_usage = 0
 __batch_ram_usage = -1
 
-@dataclass
 class __BatchEmbeddingData:
-    ids: List = field(default_factory=lambda: [])
-    embeddings: List = field(default_factory=lambda: [])
+    def __init__(self):
+        self.ids = []
+        self.embeddings = []
+
+    def clearRam(self):
+        del self.ids
+        del self.embeddings
+        self.ids = []
+        self.embeddings = []
 
 
 def __unloadRam(data: __BatchEmbeddingData, batch_num: int, save_dir: str=".", ram_use_limit_percentage: int = 60):
@@ -37,18 +42,20 @@ def __unloadRam(data: __BatchEmbeddingData, batch_num: int, save_dir: str=".", r
     print(f"BASE RAM: {__base_ram_usage}\tBATCH_RAM:{__batch_ram_usage}\tCUR_RAM:{psutil.virtual_memory()[2]}")
 
     if psutil.virtual_memory()[2] + __batch_ram_usage > ram_use_limit_percentage:
-        #print("MOVING FILES TO DISK")
+        print("MOVING FILES TO DISK")
         #os.makedirs(save_dir, exist_ok=True)
         #with h5py.File(os.path.join(save_dir, f"ids_and_embeddings_{batch_num}.hdf5"), "w") as file:
         #    file.create_dataset("ids", data=data.ids)
         #    file.create_dataset("embeddings", data=data.embeddings)
         #    file.close()
 
-        #print("FILES MOVED TO DISK")
+        print("FILES MOVED TO DISK")
 
         #print("ZIPPING THE SAVED EMBEDDINGS")
         #subprocess.run(f"zip -r {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}')}.zip {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}.hdf5')} && rm -rf {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}.hdf5')}", shell=True)
         #print("FINISHED ZIPPING THE SAVED EMBEDDINGS")
+
+        data.clearRam()
 
         return True
 
@@ -138,7 +145,6 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
 
                 if __unloadRam(batch_embedding_data, ram_batch, save_dir=os.path.join(".", f"ids_and_embeddings")):
                     ram_batch += 1
-                    batch_embedding_data = __BatchEmbeddingData()
 
                 __memoryCleanup()
 
