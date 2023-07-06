@@ -59,11 +59,11 @@ def __unloadRam(data: __BatchEmbeddingData, batch_num: int, save_dir: str=".", r
 
         all_objects = muppy.get_objects()
         sum = summary.summarize(all_objects)
-        print(sum)
+        summary.print_(sum)
         data.clearRam()
         all_objects = muppy.get_objects()
         sum = summary.summarize(all_objects)
-        print(sum)
+        summary.print_(sum)
 
         return True
 
