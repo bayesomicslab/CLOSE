@@ -45,9 +45,9 @@ def __unloadRam(data: __BatchEmbeddingData, batch_num: int, save_dir: str=".", r
             file.close()
         print("FILES MOVED TO DISK")
 
-        print("ZIPPING THE SAVED EMBEDDINGS")
-        subprocess.run(f"zip -r {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}')}.zip {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}.hdf5')} && rm -rf {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}.hdf5')}", shell=True)
-        print("FINISHED ZIPPING THE SAVED EMBEDDINGS")
+        #print("ZIPPING THE SAVED EMBEDDINGS")
+        #subprocess.run(f"zip -r {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}')}.zip {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}.hdf5')} && rm -rf {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}.hdf5')}", shell=True)
+        #print("FINISHED ZIPPING THE SAVED EMBEDDINGS")
 
         data.ids = []
         data.embeddings = []
