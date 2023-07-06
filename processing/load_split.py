@@ -37,14 +37,14 @@ def __unloadRam(data: __BatchEmbeddingData, batch_num: int, save_dir: str=".", r
     print(f"BASE RAM: {__base_ram_usage}\tBATCH_RAM:{__batch_ram_usage}\tCUR_RAM:{psutil.virtual_memory()[2]}")
 
     if psutil.virtual_memory()[2] + __batch_ram_usage > ram_use_limit_percentage:
-        print("MOVING FILES TO DISK")
-        os.makedirs(save_dir, exist_ok=True)
-        with h5py.File(os.path.join(save_dir, f"ids_and_embeddings_{batch_num}.hdf5"), "w") as file:
-            file.create_dataset("ids", data=data.ids)
-            file.create_dataset("embeddings", data=data.embeddings)
-            file.close()
+        #print("MOVING FILES TO DISK")
+        #os.makedirs(save_dir, exist_ok=True)
+        #with h5py.File(os.path.join(save_dir, f"ids_and_embeddings_{batch_num}.hdf5"), "w") as file:
+        #    file.create_dataset("ids", data=data.ids)
+        #    file.create_dataset("embeddings", data=data.embeddings)
+        #    file.close()
 
-        print("FILES MOVED TO DISK")
+        #print("FILES MOVED TO DISK")
 
         #print("ZIPPING THE SAVED EMBEDDINGS")
         #subprocess.run(f"zip -r {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}')}.zip {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}.hdf5')} && rm -rf {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}.hdf5')}", shell=True)
