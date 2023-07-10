@@ -1,6 +1,8 @@
 from typing import Callable, Dict, List, Tuple
 
+import gzip
 from transformers import PreTrainedModel
+import glob
 import torch
 import gc
 import psutil
@@ -20,8 +22,14 @@ class __BatchEmbeddingData:
         self.embeddings = []
 
     def clearRam(self):
+        for id in self.ids:
+          del id
         del self.ids
+
+        for embedding in self.embeddings:
+          del embedding
         del self.embeddings
+
         self.ids = []
         self.embeddings = []
 
@@ -44,19 +52,6 @@ def __unloadRam(data: __BatchEmbeddingData, batch_num: int, save_dir: str=".", r
     print(f"BASE RAM: {__base_ram_usage}\tBATCH_RAM:{__batch_ram_usage}\tCUR_RAM:{psutil.virtual_memory()[2]}")
 
     if psutil.virtual_memory()[2] + __batch_ram_usage > ram_use_limit_percentage:
-        print("MOVING FILES TO DISK")
-        #os.makedirs(save_dir, exist_ok=True)
-        #with h5py.File(os.path.join(save_dir, f"ids_and_embeddings_{batch_num}.hdf5"), "w") as file:
-        #    file.create_dataset("ids", data=data.ids)
-        #    file.create_dataset("embeddings", data=data.embeddings)
-        #    file.close()
-
-        print("FILES MOVED TO DISK")
-
-        #print("ZIPPING THE SAVED EMBEDDINGS")
-        #subprocess.run(f"zip -r {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}')}.zip {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}.hdf5')} && rm -rf {os.path.join(save_dir, f'ids_and_embeddings_{batch_num}.hdf5')}", shell=True)
-        #print("FINISHED ZIPPING THE SAVED EMBEDDINGS")
-
         all_objects = muppy.get_objects()
         sum = summary.summarize(all_objects)
         summary.print_(sum)
@@ -66,7 +61,7 @@ def __unloadRam(data: __BatchEmbeddingData, batch_num: int, save_dir: str=".", r
 
     return False
 
-def __processLoad(data: __BatchEmbeddingData, batch_ids: List, batch_tokenized: Dict, batch_num: int, model: PreTrainedModel, run: Callable, device: str = "cpu"):
+def __processLoad(data: __BatchEmbeddingData, batch_ids: List, batch_tokenized: Dict, batch_num: int, zip_num: int, model: PreTrainedModel, run: Callable, device: str = "cpu", save_dir: str="."):
     """
     process the corresponding load on the model and extract embeddings
 
@@ -94,9 +89,14 @@ def __processLoad(data: __BatchEmbeddingData, batch_ids: List, batch_tokenized: 
     print(f"FINISHED RUNNING BATCH {batch_num} EXTRACT EMBEDDINGS")
     
     print(f"MOVING BATCH {batch_num} TO CPU")
-    for i, emb in zip(embeddings_batch[0], embeddings_batch[1]):
-        data.ids.append(i)
-        data.embeddings.append(emb.to('cpu').numpy())
+    
+    with open(os.path.join(save_dir, f"ids_{zip_num}.txt"), "a") as idfile:
+      for id in embeddings_batch[0]:
+        idfile.write(str(id)+"\n")
+        
+    with open(os.path.join(save_dir, f"embeds_{zip_num}.csv"), "a") as embfile:
+      cls_embeddings = embeddings_batch[1].detach().cpu().numpy()[:,0,:]
+      np.savetxt(embfile,cls_embeddings,delimiter=',')
 
     print(f"extracted_embeddings: len {len(data.embeddings) if data.embeddings is not None else 'None'}")
     print(f"FINISHED MOVING BATCH {batch_num} TO CPU")
@@ -107,6 +107,13 @@ def __memoryCleanup():
     torch.cuda.empty_cache()
     print(f"FINISHED COLLECTING GARBAGE")
 
+def __cleanFiles(save_dir):
+    filelist = glob.glob(os.path.join(save_dir, "ids_*.txt"))
+    filelist.extend(glob.glob(os.path.join(save_dir, "embeds_*.csv")))
+    filelist.extend(glob.glob(os.path.join(save_dir, "ids_*.txt.gz")))
+    filelist.extend(glob.glob(os.path.join(save_dir, "embeds_*.csv.gz")))
+    for f in filelist:
+        os.remove(f)
 
 def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, run: Callable, split_size: int = 1000, save_dir: str = "."):
     """
@@ -117,9 +124,12 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
     :param run: the function to be called with model and dat for the extraction of embeddings :param split_size: the size of the splits to be used
     :param save_dir: the directory to save to when ram is being overflowed
     """
-
     global __base_ram_usage
     global __batch_ram_usage
+
+    os.makedirs(save_dir, exist_ok=True)
+    # clean up bad runs
+    __cleanFiles(save_dir)
     
     torch.cuda.empty_cache()
 
@@ -135,20 +145,26 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
         cnt = 0
         cur_batch = 0
         ram_batch = 0
+        zip_num = 0
+        total_extracted = 0
 
         __base_ram_usage = psutil.virtual_memory()[2]
-    
+        
         for id, input_ids, token_type_ids, attention_mask in zip(data[0], data[1]["input_ids"], data[1]["token_type_ids"], data[1]["attention_mask"]):
             if cnt == split_size:
+                print(cur_batch)
                 print("-"*50)
-                __processLoad(batch_embedding_data, id_batch, tokenized_batch, cur_batch, model, run, device)
+                __processLoad(batch_embedding_data, id_batch, tokenized_batch, cur_batch, zip_num, model, run, device, save_dir=save_dir)
+                print(len(id_batch))
+                print(total_extracted)
+                total_extracted += len(id_batch)
 
                 id_batch = []
                 tokenized_batch = {"input_ids": [], "token_type_ids": [], "attention_mask": []}
                 cnt = 0
                 cur_batch += 1
 
-                if __unloadRam(batch_embedding_data, ram_batch, save_dir=os.path.join(".", f"ids_and_embeddings")):
+                if __unloadRam(batch_embedding_data, ram_batch, save_dir=save_dir):
                     ram_batch += 1
 
                     __memoryCleanup()
@@ -169,10 +185,18 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
             tokenized_batch["attention_mask"].append(attention_mask)
             cnt += 1
 
+            if total_extracted >= 30000:
+                print("ZIPPING THE SAVED EMBEDDINGS")
+                zip_cmd = f"gzip \"{os.path.join(save_dir, f'ids_{zip_num}')}.txt\" ; gzip \"{os.path.join(save_dir, f'embeds_{zip_num}.csv')}\""
+                !{zip_cmd}
+                print("FINISHED ZIPPING THE SAVED EMBEDDINGS")
+                zip_num+=1
+                total_extracted=0
+
         if cnt > 0:
             print("-"*50)
-            __processLoad(batch_embedding_data, id_batch, tokenized_batch, cur_batch, model, run, device)
-
+            __processLoad(batch_embedding_data, id_batch, tokenized_batch, cur_batch, zip_num, model, run, device, save_dir=save_dir)
+            total_extracted += len(batch_embedding_data[0])
             id_batch = []
             tokenized_batch = {"input_ids": [], "token_type_ids": [], "attention_mask": []}
             cnt = 0
@@ -180,7 +204,7 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
 
             __batch_ram_usage = 100 # WARNING: Stupid trick to force ram unloader to save files, don't change but don't do this trick either
 
-            if __unloadRam(batch_embedding_data, ram_batch, save_dir=os.path.join(".", f"ids_and_embeddings")):
+            if __unloadRam(batch_embedding_data, ram_batch, save_dir=save_dir):
                 ram_batch += 1
 
             __memoryCleanup()
