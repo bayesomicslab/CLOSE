@@ -96,7 +96,7 @@ def __processLoad(data: __BatchEmbeddingData, batch_ids: List, batch_tokenized: 
     print(f"MOVING BATCH {batch_num} TO CPU")
     for i, emb in zip(embeddings_batch[0], embeddings_batch[1]):
         data.ids.append(i)
-        data.embeddings.append(emb.to('cpu').detach().numpy())
+        data.embeddings.append(emb.to('cpu').numpy())
 
     print(f"extracted_embeddings: len {len(data.embeddings) if data.embeddings is not None else 'None'}")
     print(f"FINISHED MOVING BATCH {batch_num} TO CPU")
