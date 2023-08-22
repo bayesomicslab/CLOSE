@@ -65,11 +65,13 @@ def __unloadRam(data: __BatchEmbeddingData, embeddings_data_files: __DataFiles, 
 
     if psutil.virtual_memory()[2] + __BATCH_RAM_USAGE > ram_use_limit_percentage:
         save_path: str = os.path.join(save_dir, f"embeddings_num_{batch_num}.h5")
+        print(f"RAM OVERFLOW DETECTED SAVING TO FILE {save_path}")
         embeddings_data_files.files.append(save_path)
         with h5py.File(save_path, "w") as hf:
             hf.create_dataset("ids", data.ids)
             hf.create_dataset("embeddings", data.embeddings)
             hf.close()
+        print(f"RAM OVERFLOW DETECTED FINISHED SAVING TO FILE {save_path}")
         return True
 
     return False
@@ -130,12 +132,18 @@ def __compressFiles(files: __DataFiles, filename: str):
     :param files: the list of files i need to compress
     """
 
+    print("COMPRESSING FILES")
     with zipfile.ZipFile(filename, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=4) as zipf:
         for f in files.files:
             zipf.write(f)
 
+    print("FINISHED COMPRESSION")
+
+    print("REMOVING COMPRESSED FILES")
     for f in files.files:
         os.remove(f)
+    print("FINISHED REMOVING COMPRESSED FILES")
+
 
 
 def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, run: Callable, split_size: int = 1000, zip_size: int = 1000, save_dir: str = "."):
@@ -175,6 +183,8 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
                 print(f"BATCH: {cnt // split_size}")
                 __processLoad(batch_tokenized_data, batch_embedding_data, cnt//split_size, model, run, device=device)
                 batch_tokenized_data.clear()
+
+                print(f"TOTAL EMBEDDINGS SAVED IS {len(batch_embedding_data.embeddings)}")
 
                 if __unloadRam(batch_embedding_data, embeddings_data_files, ram_cnt, save_dir=save_dir): # If ram has been used up then unload the RAM in order to continue saving new embeddings
                     batch_embedding_data.clear()
