@@ -134,6 +134,9 @@ def __compressFiles(files: __DataFiles, filename: str):
         for f in files.files:
             zipf.write(f)
 
+    for f in files.files:
+        os.remove(f)
+
 
 def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, run: Callable, split_size: int = 1000, zip_size: int = 1000, save_dir: str = "."):
     """
@@ -187,7 +190,7 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
             cnt += 1
 
             if ram_cnt%zip_size == 0 and ram_cnt:
-                __compressFiles(embeddings_data_files, os.path.join(".", f"embeddings_zip_batch_{ram_cnt//zip_size}.zip"))
+                __compressFiles(embeddings_data_files, os.path.join(save_dir, f"embeddings_zip_batch_{ram_cnt//zip_size}.zip"))
                 embeddings_data_files.clear()
                 __memoryCleanup()
 
@@ -207,7 +210,7 @@ def extractEmbeddingsLoadSplit(data: Tuple[List, Dict], model: PreTrainedModel, 
 
 
         if ram_cnt%zip_size != 0 and ram_cnt:
-            __compressFiles(embeddings_data_files, os.path.join(".", f"embeddings_zip_batch_{(ram_cnt//zip_size) + 1}.zip"))
+            __compressFiles(embeddings_data_files, os.path.join(save_dir, f"embeddings_zip_batch_{(ram_cnt//zip_size) + 1}.zip"))
             embeddings_data_files.clear()
             __memoryCleanup()
 
