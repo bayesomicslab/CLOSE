@@ -68,8 +68,8 @@ def __unloadRam(data: __BatchEmbeddingData, embeddings_data_files: __DataFiles, 
         print(f"RAM OVERFLOW DETECTED SAVING TO FILE {save_path}")
         embeddings_data_files.files.append(save_path)
         with h5py.File(save_path, "w") as hf:
-            hf.create_dataset("ids", data.ids)
-            hf.create_dataset("embeddings", data.embeddings)
+            hf.create_dataset("ids", data=data.ids)
+            hf.create_dataset("embeddings", data=data.embeddings)
             hf.close()
         print(f"RAM OVERFLOW DETECTED FINISHED SAVING TO FILE {save_path}")
         return True
