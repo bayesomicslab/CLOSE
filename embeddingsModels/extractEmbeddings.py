@@ -35,3 +35,19 @@ def extractEmbeddings(model: PreTrainedModel, data: Tuple[List, Dict]):
     print("FINISHED MODEL RUNNING")
 
     return ids, embeddings
+
+def extractClsEmbeddings(model: PreTrainedModel, data: Tuple[List, Dict]):
+    """
+    Only extracts the CLS embeddings for the data from the bert model
+
+    :param model: the model that will be used for embedding creation
+    """
+
+    ids = data[0]
+    data_tokenized = data[1]
+
+    print("MODEL RUNNING")
+    embeddings = model(**data_tokenized).last_hidden_state[:,0,:]
+    print("FINISHED MODEL RUNNING")
+
+    return ids, embeddings
